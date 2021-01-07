@@ -15,7 +15,7 @@ datatype lisp = Unit of unit
 | car of lisp 
 | cdr of lisp  
 | lel of lisp
-| lambda of lisp
+| lambda of lisp*lisp*lisp
 | apply of lisp*lisp
 | quote of lisp 
 | cons of lisp*lisp
@@ -54,6 +54,8 @@ fun eval (Unit u) = Unit u
         none => Unit ()
     | cons(h,t) => (eval t)
     in getCdr lst end
+
+| eval (lambda(par,body,arg)) = body 
 
 (* return*)
 | eval (apply((Str h),t)) = let fun getFun(h,t): lisp =
