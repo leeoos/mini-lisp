@@ -1,5 +1,7 @@
-(* mini lisp *)
+(* Mini-LISP *)
+
 type symbol = string
+
 datatype lisp = Unit of unit 
 | Int of int 
 | Str of string 
