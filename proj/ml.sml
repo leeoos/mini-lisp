@@ -1,12 +1,13 @@
 (* mini lisp *)
-type sym = string
-
+type symbol = string
 datatype lisp = Unit of unit 
 | Int of int 
 | Str of string 
 | Char of char 
 | Bool of bool 
 | Real of real 
+| Var of symbol
+| Sym of symbol
 | none 
 | plus of lisp*lisp
 | car of lisp 
@@ -18,20 +19,9 @@ datatype lisp = Unit of unit
 | cons of lisp*lisp
 | lol of lisp list
 
+
 (* given a Int-lisp it return an int*)  
 fun getInt (Int i) = i
-
-(* return the first element of a s-expression*)
-fun getCar(lst: lisp): lisp =
-    case lst of
-        none => Unit ()
-    | cons(h,t) => h
-
-(* return the firs element of a s-expression of type cons*)
-fun getCdr(lst: lisp): lisp =
-    case lst of
-        none => Unit ()
-    | cons(h,t) => t
 
 (* returns the part of the list that follows the first item*)
 fun sum(lst:lisp list): int = 
@@ -47,18 +37,31 @@ fun eval (Unit u) = Unit u
 | eval (Bool b) = Bool b
 | eval (Real r) = Real r
 | eval (plus (a,b)) = Int ((getInt (eval a)) + (getInt (eval b)))
-(*| eval (plus (lol lst)) = Int (sum lst)*)
-| eval (car lst) = (getCar lst)
-| eval (cdr lst) = (getCdr lst)
 | eval (cons(h,t)) = cons(h,t)
-| eval (lol lst) = (lol lst)
-| eval (quote M) = lol [M]
+
+(*car of a list displays the first elemnt of that list *)
+| eval (car lst) = let fun getCar(lst)= 
+    case lst of
+        none => Unit ()
+    | cons(h,t) => (eval h)
+    in getCar (eval lst) end
+
+(*cdr of a list displays all the elemnts of that list but the first *)
+| eval (cdr lst) = let fun getCdr(lst) =  
+    case lst of
+        none => Unit ()
+    | cons(h,t) => (eval t)
+    in getCdr lst end
+
+(* return*)
 | eval (apply((Str h),t)) = let fun getFun(h,t): lisp =
     case h of
-        "plus" => eval (plus ( eval (car t), eval (car (eval (cdr t)))))
-       (*"plus" => eval (plus ((eval(car t), eval ( apply((Str "plus"), cdr
-       t)))))*)
+       "plus" => eval (plus (car t, (car (cdr t))))
+    |"car" => eval (car t)
+    |"cdr" => eval (cdr t)
     in getFun(h,t) end
+
+
 
 fun pretty (Unit u) = "()"
 | pretty (Int i) = Int.toString i 
@@ -67,26 +70,27 @@ fun pretty (Unit u) = "()"
 | pretty (Bool b) = Bool.toString b
 | pretty (Real r) = Real.toString r
 | pretty (plus (Int a, Int b)) = pretty(Int (a + b))
-(*| pretty (plus (lol lst)) = pretty(eval(plus(lol lst)))*)
-| pretty (lol lst) =  "("^ 
-    let fun printList(lst:lisp list):string = 
-        case lst of 
-            [] => ""
-        | h :: t => (pretty h) ^" "^ (printList t)
-    in printList lst end  ^")"
-(*| pretty (cons(h,t)) =  "$"^ (pretty h) ^" "^ (pretty t)*)
-| pretty (cons(h,t)) = "("^  
-    let fun printCons(lst:lisp):string = 
-        case lst of 
+| pretty (cons(h,t)) = "("^ let fun printCons(lst:lisp):string = 
+    case lst of 
             none => ""
-        | cons(h,t) => (pretty h) ^" "^ (printCons t)
+    | cons(h,t) => (pretty h) ^" "^ (printCons t)
     in printCons (cons(h,t)) end  ^")"
+    
 
-        
-fun printer value = (print (""^"\n- "^ (pretty (eval value)) ^"\n"^"\n"))
+fun printer term = (print ("\n- "^ (pretty (eval term)) ^"\n"^"\n"))
 
-                   
 
+fun getType (Unit u) = "Unit"
+| getType (Int i) = "int"
+| getType (Str s) = "string"
+| getType (Char c) = "char"
+| getType (Bool b) = "bool"
+| getType (Real r) = "real"
+| getType (Var x) = "variable"
+| getType (Sym y) = "symbol" 
+| getType (cons(h,t)) = "cons"
+
+fun typeOf term = (print ("\n- "^ (getType term) ^"\n"^"\n"))
 
 
 
