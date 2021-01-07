@@ -27,7 +27,7 @@ datatype lisp = Unit of unit
 fun getInt (Int i) = i
 | getInt _ = raise Fail "Wrong argument type, integer needed"
 
-fun p (x,y) = cons(y,x)
+fun Id x  = x
 
 
 fun eval (Unit u) = Unit u
@@ -71,14 +71,8 @@ fun eval (Unit u) = Unit u
     |"cdr" => eval (cdr t)
     in getFun(h,t) end
 
-(*| eval (apply(lambda(x,f),args)) = f(let fun getArg(args) =
-    case args of
-        none => none
-    |cons(h,t) => (h,getArg t)
-    in getArg args end) *)
-
 | eval (cons(h,t)) = cons(h,t)
-(*| eval _ = raise Fail "non exaustive match"*)
+| eval _ = raise Fail "non exaustive match"
 
 
 fun pretty (Unit u) = "()"
