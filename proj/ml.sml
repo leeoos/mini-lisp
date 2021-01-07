@@ -10,26 +10,24 @@ datatype lisp = Unit of unit
 | Real of real 
 | Var of symbol
 | Sym of symbol
+| Exp of symbol
 | none 
-| plus of lisp*lisp
-| car of lisp 
-| cdr of lisp  
-| lel of lisp
-| lambda of lisp*lisp*lisp
+| plus of lisp*lisp 
+| Plus of lisp
+| car of lisp       
+| cdr of lisp       
+| letLisp of lisp*lisp
+| lambda of lisp*lisp   
 | apply of lisp*lisp
 | quote of lisp 
 | cons of lisp*lisp
-| lol of lisp list
 
 
 (* given a Int-lisp it return an int*)  
 fun getInt (Int i) = i
+| getInt _ = raise Fail "Wrong argument type, integer needed"
 
-(* returns the part of the list that follows the first item*)
-fun sum(lst:lisp list): int = 
-    case lst of 
-        [] => 0
-    | h :: t => (getInt h) + (sum t)
+fun p (x,y) = cons(y,x)
 
 
 fun eval (Unit u) = Unit u
@@ -38,8 +36,15 @@ fun eval (Unit u) = Unit u
 | eval (Char c) = Char c
 | eval (Bool b) = Bool b
 | eval (Real r) = Real r
+| eval (none) = Int 0
 | eval (plus (a,b)) = Int ((getInt (eval a)) + (getInt (eval b)))
-| eval (cons(h,t)) = cons(h,t)
+
+(*This function adds its arguments together *)
+| eval (Plus lst) = Int (let fun sum(lst) = 
+    case lst of 
+        none => 0
+    |cons(h,t) => getInt(eval h) + sum(t)
+    in sum (eval lst) end)
 
 (*car of a list displays the first elemnt of that list *)
 | eval (car lst) = let fun getCar(lst)= 
@@ -55,16 +60,25 @@ fun eval (Unit u) = Unit u
     | cons(h,t) => (eval t)
     in getCdr lst end
 
-| eval (lambda(par,body,arg)) = body 
+| eval (lambda(args,body)) = eval body
 
-(* return*)
-| eval (apply((Str h),t)) = let fun getFun(h,t): lisp =
+(*apply calls lisp functions with given arguments*)
+| eval (apply((Sym h),t)) = let fun getFun(h,t): lisp =
     case h of
-       "plus" => eval (plus (car t, (car (cdr t))))
+     "plus" => eval (plus (car t, (car (cdr t))))
+    |"Plus" => eval(Plus t)
     |"car" => eval (car t)
     |"cdr" => eval (cdr t)
     in getFun(h,t) end
 
+(*| eval (apply(lambda(x,f),args)) = f(let fun getArg(args) =
+    case args of
+        none => none
+    |cons(h,t) => (h,getArg t)
+    in getArg args end) *)
+
+| eval (cons(h,t)) = cons(h,t)
+(*| eval _ = raise Fail "non exaustive match"*)
 
 
 fun pretty (Unit u) = "()"
@@ -73,6 +87,9 @@ fun pretty (Unit u) = "()"
 | pretty (Char c) = Char.toString c
 | pretty (Bool b) = Bool.toString b
 | pretty (Real r) = Real.toString r
+| pretty (Var x) = x
+| pretty (Sym y) = y
+| pretty (Exp e) = e
 | pretty (plus (Int a, Int b)) = pretty(Int (a + b))
 | pretty (cons(h,t)) = "("^ let fun printCons(lst:lisp):string = 
     case lst of 
