@@ -27,7 +27,15 @@ datatype lisp = Unit of unit
 fun getInt (Int i) = i
 | getInt _ = raise Fail "Wrong argument type, integer needed"
 
+<<<<<<< HEAD
 fun Id x  = x
+=======
+fun len(lst) = case lst of none => 0
+                |cons(h,t) => 1 + (len t)
+                |_ => raise Fail "Error argument not a list"
+
+fun id x = x
+>>>>>>> lambda
 
 
 fun eval (Unit u) = Unit u
@@ -36,6 +44,8 @@ fun eval (Unit u) = Unit u
 | eval (Char c) = Char c
 | eval (Bool b) = Bool b
 | eval (Real r) = Real r
+| eval (Var x) = Var x
+| eval (Sym sym) = Sym sym
 | eval (none) = Int 0
 | eval (plus (a,b)) = Int ((getInt (eval a)) + (getInt (eval b)))
 
@@ -60,7 +70,7 @@ fun eval (Unit u) = Unit u
     | cons(h,t) => (eval t)
     in getCdr lst end
 
-| eval (lambda(args,body)) = eval body
+| eval (lambda(var,body)) = eval (car body)
 
 (*apply calls lisp functions with given arguments*)
 | eval (apply((Sym h),t)) = let fun getFun(h,t): lisp =
@@ -71,6 +81,14 @@ fun eval (Unit u) = Unit u
     |"cdr" => eval (cdr t)
     in getFun(h,t) end
 
+<<<<<<< HEAD
+=======
+| eval (apply(lambda(var,body),args)) = 
+    if (len var) = (len args) then
+        eval (apply (eval (car body), args))
+    else raise Fail "Wrong number of arguments"
+
+>>>>>>> lambda
 | eval (cons(h,t)) = cons(h,t)
 | eval _ = raise Fail "non exaustive match"
 
@@ -82,7 +100,7 @@ fun pretty (Unit u) = "()"
 | pretty (Bool b) = Bool.toString b
 | pretty (Real r) = Real.toString r
 | pretty (Var x) = x
-| pretty (Sym y) = y
+| pretty (Sym sym) = sym
 | pretty (Exp e) = e
 | pretty (plus (Int a, Int b)) = pretty(Int (a + b))
 | pretty (cons(h,t)) = "("^ let fun printCons(lst:lisp):string = 
@@ -102,10 +120,13 @@ fun getType (Unit u) = "Unit"
 | getType (Bool b) = "bool"
 | getType (Real r) = "real"
 | getType (Var x) = "variable"
-| getType (Sym y) = "symbol" 
+| getType (Sym sym) = "symbol" 
 | getType (cons(h,t)) = "cons"
 
-fun typeOf term = (print ("\n- "^ (getType term) ^"\n"^"\n"))
+fun typeOf term = (print ("\n- "^ (getType term) ^"\n"^"\n"));
 
+print ("\n\nExamples:\n");
+val t = cons((Int 1), cons((Int 2), cons((Int 3), cons((Int 4),none))));
 
+val l = (lambda(cons((Var "a"),cons((Var "b"),none)), cons((Sym "Plus"),cons((Var "a"),cons((Var "b"),none)))));
 
