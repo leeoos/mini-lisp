@@ -27,15 +27,11 @@ datatype lisp = Unit of unit
 fun getInt (Int i) = i
 | getInt _ = raise Fail "Wrong argument type, integer needed"
 
-<<<<<<< HEAD
-fun Id x  = x
-=======
 fun len(lst) = case lst of none => 0
                 |cons(h,t) => 1 + (len t)
                 |_ => raise Fail "Error argument not a list"
 
 fun id x = x
->>>>>>> lambda
 
 
 fun eval (Unit u) = Unit u
@@ -81,14 +77,11 @@ fun eval (Unit u) = Unit u
     |"cdr" => eval (cdr t)
     in getFun(h,t) end
 
-<<<<<<< HEAD
-=======
 | eval (apply(lambda(var,body),args)) = 
     if (len var) = (len args) then
         eval (apply (eval (car body), args))
     else raise Fail "Wrong number of arguments"
 
->>>>>>> lambda
 | eval (cons(h,t)) = cons(h,t)
 | eval _ = raise Fail "non exaustive match"
 
