@@ -60,6 +60,7 @@ fun eval (Unit u) = Unit u
     | cons(h,t) => (eval t)
     in getCdr lst end
 
+| eval (letLisp ) = let x = 
 | eval (lambda(args,body)) = eval body
 
 (*apply calls lisp functions with given arguments*)
