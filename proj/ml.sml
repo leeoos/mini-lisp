@@ -114,4 +114,4 @@ fun getType (Unit u) = "Unit"
 fun typeOf term = (print ("\n- "^ (getType term) ^"\n"^"\n"))
 
 
-
+val x = cons((Int 1), cons((Int 2), cons((Int 3), cons((Int 4),none))));
