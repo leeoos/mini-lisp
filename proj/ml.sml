@@ -27,7 +27,7 @@ datatype lisp = Unit of unit
 fun getInt (Int i) = i
 | getInt _ = raise Fail "Wrong argument type, integer needed"
 
-fun p (x,y) = cons(y,x)
+fun Id x = x
 
 
 fun eval (Unit u) = Unit u
@@ -60,6 +60,7 @@ fun eval (Unit u) = Unit u
     | cons(h,t) => (eval t)
     in getCdr lst end
 
+| eval (letLisp ) = let x = 
 | eval (lambda(args,body)) = eval body
 
 (*apply calls lisp functions with given arguments*)
@@ -78,7 +79,7 @@ fun eval (Unit u) = Unit u
     in getArg args end) *)
 
 | eval (cons(h,t)) = cons(h,t)
-(*| eval _ = raise Fail "non exaustive match"*)
+| eval _ = raise Fail "non exaustive match"
 
 
 fun pretty (Unit u) = "()"
@@ -111,7 +112,7 @@ fun getType (Unit u) = "Unit"
 | getType (Sym y) = "symbol" 
 | getType (cons(h,t)) = "cons"
 
-fun typeOf term = (print ("\n- "^ (getType term) ^"\n"^"\n"))
+fun typeOf term = (print ("\n- "^ (getType term) ^"\n"^"\n"));
 
-
-val x = cons((Int 1), cons((Int 2), cons((Int 3), cons((Int 4),none))));
+print ("\n\nExamples:\n");
+val t = cons((Int 1), cons((Int 2), cons((Int 3), cons((Int 4),none))));
