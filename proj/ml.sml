@@ -26,6 +26,8 @@ datatype lisp = Unit of unit
 (* given a Int-lisp it return an int*)  
 fun getInt (Int i) = i
 | getInt _ = raise Fail "Wrong argument type, integer needed"
+  
+
 
 fun len(lst) = case lst of none => 0
                 |cons(h,t) => 1 + (len t)
@@ -42,10 +44,11 @@ fun eval (Unit u) = Unit u
 | eval (Real r) = Real r
 | eval (Var x) = Var x
 | eval (Sym sym) = Sym sym
-| eval (none) = Int 0
+| eval (none) = none
 | eval (plus (a,b)) = Int ((getInt (eval a)) + (getInt (eval b)))
 
 (*This function adds its arguments together *)
+
 | eval (Plus lst) = Int (let fun sum(lst) = 
     case lst of 
         none => 0
@@ -78,9 +81,30 @@ fun eval (Unit u) = Unit u
     in getFun(h,t) end
 
 | eval (apply(lambda(var,body),args)) = 
-    if (len var) = (len args) then
-        eval (apply (eval (car body), args))
-    else raise Fail "Wrong number of arguments"
+    if (len var) = (len args) then 
+        let val Env =
+            let fun startEnv( var, args, env)= case var of
+                none => env
+                | cons (h,t) => startEnv(eval(cdr(var)), eval(cdr(args)),cons(cons(eval(car(var)),cons(eval(car(args)),none)),env))
+            in startEnv(var,args,none) end 
+
+        in let fun getEnv ((Var v), env) = 
+            case env of
+            none => raise Fail "Empty environment"
+            | cons (h,t) => if  v = let fun getVar(Var x) = x in getVar(eval(car(h))) end
+                            then eval (car (cdr h) ) else getEnv( (Var v), t ) in
+
+            let fun evalExp(body,res) = case body of
+                Plus(none) => Int res
+                |Plus(cons(Var x, t)) => evalExp(Plus (t), res + getInt(getEnv((Var x), Env))) 
+                |Plus(cons(Int i, t)) => evalExp(Plus(t) , res + i) 
+                |car(Var x) => eval(car(getEnv((Var x), Env)))   
+                |car(cons(Var x, t)) => eval(getEnv((Var x), Env))
+                |car(cons(h, t)) => eval(h)
+            in evalExp(body,0) end 
+        end end
+ 
+    else raise Fail "wrong number of arguments"
 
 | eval (cons(h,t)) = cons(h,t)
 | eval _ = raise Fail "non exaustive match"
@@ -101,7 +125,6 @@ fun pretty (Unit u) = "()"
             none => ""
     | cons(h,t) => (pretty h) ^" "^ (printCons t)
     in printCons (cons(h,t)) end  ^")"
-    
 
 fun printer term = (print ("\n- "^ (pretty (eval term)) ^"\n"^"\n"))
 
@@ -122,4 +145,6 @@ print ("\n\nExamples:\n");
 val t = cons((Int 1), cons((Int 2), cons((Int 3), cons((Int 4),none))));
 
 val l = (lambda(cons((Var "a"),cons((Var "b"),none)), cons((Sym "Plus"),cons((Var "a"),cons((Var "b"),none)))));
+
+val body = Plus(cons(eval(car(cons((Var "x"), cons((Var "y"),none)))), cons((Var "y"),none)));
 
