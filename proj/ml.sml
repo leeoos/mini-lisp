@@ -21,19 +21,19 @@ datatype lisp = Unit of unit
 | apply of lisp*lisp
 | quote of lisp 
 | cons of lisp*lisp
+| stupid of lisp
 
 
 (* given a Int-lisp it return an int*)  
 fun getInt (Int i) = i
 | getInt _ = raise Fail "Wrong argument type, integer needed"
+
+fun isInt (elem) = case elem of (Int i) => true | _=> false
+fun isVar (elem) = case elem of (Var v) => true | _=> false
   
-
-
 fun len(lst) = case lst of none => 0
                 |cons(h,t) => 1 + (len t)
                 |_ => raise Fail "Error argument not a list"
-
-fun id x = x
 
 
 fun eval (Unit u) = Unit u
@@ -47,8 +47,7 @@ fun eval (Unit u) = Unit u
 | eval (none) = none
 | eval (plus (a,b)) = Int ((getInt (eval a)) + (getInt (eval b)))
 
-(*This function adds its arguments together *)
-
+(*the add function adds its arguments together *)
 | eval (Plus lst) = Int (let fun sum(lst) = 
     case lst of 
         none => 0
@@ -67,11 +66,15 @@ fun eval (Unit u) = Unit u
     case lst of
         none => Unit ()
     | cons(h,t) => (eval t)
-    in getCdr lst end
+    in getCdr (eval lst) end
 
+(*let expression *)
+| eval (letLisp(m,n)) = cons(m,n) 
+
+(*lambda expression is a function object written in lisp *)
 | eval (lambda(var,body)) = eval (car body)
 
-(*apply calls lisp functions with given arguments*)
+(*apply calls lisp functions with given arguments *)
 | eval (apply((Sym h),t)) = let fun getFun(h,t): lisp =
     case h of
      "plus" => eval (plus (car t, (car (cdr t))))
@@ -80,6 +83,7 @@ fun eval (Unit u) = Unit u
     |"cdr" => eval (cdr t)
     in getFun(h,t) end
 
+(*secial case, apply of lambda *)
 | eval (apply(lambda(var,body),args)) = 
     if (len var) = (len args) then 
         let val Env =
@@ -90,24 +94,41 @@ fun eval (Unit u) = Unit u
 
         in let fun getEnv ((Var v), env) = 
             case env of
-            none => raise Fail "Empty environment"
+            none => raise Fail "Empty environment or variable not found"
             | cons (h,t) => if  v = let fun getVar(Var x) = x in getVar(eval(car(h))) end
-                            then eval (car (cdr h) ) else getEnv( (Var v), t ) in
-
-            let fun evalExp(body,res) = case body of
+                            then eval (car (cdr h) ) else getEnv( (Var v), t )
+ 
+            in let fun evalExp(body,res) = case body of
                 Plus(none) => Int res
                 |Plus(cons(Var x, t)) => evalExp(Plus (t), res + getInt(getEnv((Var x), Env))) 
                 |Plus(cons(Int i, t)) => evalExp(Plus(t) , res + i) 
+                |plus(x,y) => if isVar(x) then if isVar(y) then eval(plus(getEnv(x, Env),getEnv(y, Env)))
+                                               else eval(plus(getEnv(x, Env),y))
+                              else if isVar(y) then eval(plus(x,getEnv(y,Env))) else eval(plus(x,y))
                 |car(Var x) => eval(car(getEnv((Var x), Env)))   
                 |car(cons(Var x, t)) => eval(getEnv((Var x), Env))
                 |car(cons(h, t)) => eval(h)
-            in evalExp(body,0) end 
+                in evalExp(body,0) end 
         end end
  
     else raise Fail "wrong number of arguments"
 
+(**)
+| eval (quote l) = let fun mkQuote (none) = cons(Sym "none", none) 
+    |mkQuote (Int i) = cons(Int i, none)
+    |mkQuote (Str s) = cons(Str s, none)
+    |mkQuote (Char c) = cons(Char c, none)
+    |mkQuote (Bool b) = cons(Bool b, none)
+    |mkQuote (Real r) = cons(Real r, none)
+    |mkQuote (Var x) = cons(Var x, none)
+    |mkQuote (Sym sy) = cons(Sym sy, none)
+    |mkQuote (cons(h,t)) = cons(Sym "cons", cons(h,mkQuote(t)))
+    |mkQuote (Plus lst) = cons(Sym "Plus", mkQuote(lst))
+    in mkQuote(l) end
+        
+
 | eval (cons(h,t)) = cons(h,t)
-| eval _ = raise Fail "non exaustive match"
+| eval _ = raise Fail "impossible to evaluate the expression, non exaustive match"
 
 
 fun pretty (Unit u) = "()"
@@ -118,15 +139,17 @@ fun pretty (Unit u) = "()"
 | pretty (Real r) = Real.toString r
 | pretty (Var x) = x
 | pretty (Sym sym) = sym
-| pretty (Exp e) = e
 | pretty (plus (Int a, Int b)) = pretty(Int (a + b))
 | pretty (cons(h,t)) = "("^ let fun printCons(lst:lisp):string = 
     case lst of 
             none => ""
     | cons(h,t) => (pretty h) ^" "^ (printCons t)
     in printCons (cons(h,t)) end  ^")"
+| pretty (quote l) = let fun printQuote (quote none) = "none"
 
-fun printer term = (print ("\n- "^ (pretty (eval term)) ^"\n"^"\n"))
+fun isQuote(elem) = case elem of quote(l) => true | _ => false   
+(*fun printer term = (print ("\n- "^ (pretty (eval term)) ^"\n"^"\n"))*)
+fun printer term = (print ("\n- "^ (if isQuote(term) then (pretty term) else pretty(eval term)) ^"\n"^"\n"))
 
 
 fun getType (Unit u) = "Unit"
@@ -139,12 +162,19 @@ fun getType (Unit u) = "Unit"
 | getType (Sym sym) = "symbol" 
 | getType (cons(h,t)) = "cons"
 
-fun typeOf term = (print ("\n- "^ (getType term) ^"\n"^"\n"));
+fun typeOf term = (print ("\n- "^ (getType (eval term)) ^"\n"^"\n"));
 
-print ("\n\nExamples:\n");
+(* t = (1 2 3 4) *)
 val t = cons((Int 1), cons((Int 2), cons((Int 3), cons((Int 4),none))));
 
-val l = (lambda(cons((Var "a"),cons((Var "b"),none)), cons((Sym "Plus"),cons((Var "a"),cons((Var "b"),none)))));
+print ("\n\nExamples:\n");
+(* var =  (x y) *)
+val var = cons(Var "x", cons(Var "y", none));
 
+(* args =  (2 4) *)
+val args = cons(Int 2, cons(Int 4, none));
+
+(* body = (+ x y) *)
 val body = Plus(cons(eval(car(cons((Var "x"), cons((Var "y"),none)))), cons((Var "y"),none)));
+
 
