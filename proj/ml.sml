@@ -100,11 +100,11 @@ fun eval (Unit u) = Unit u
     in getFun(h,t) end
 
 (*secial case, apply of lambda *) 
-| eval (apply(lambda(var,body),args)) = applyFun(lambda(var,body),args,none)
+| eval (apply(lambda(var,body),args)) = eval(applyFun(lambda(var,body),args,none))
 | eval (applyFun(lambda(var,body),args,ENV)) = (*let fun applyLam(lambda(var,body),args,ENV)*)
     if (len var) = (len args) then 
         let val Env =
-            let fun startEnv( var, args, env)= case var of
+            let fun startEnv( var, args, env) = case var of
                 none => env
                 | cons (h,t) => startEnv(eval(cdr(var)), eval(cdr(args)),cons(cons(eval(car(var)),cons(eval(car(args)),none)),env))
             in startEnv(var,args,ENV) end
@@ -127,15 +127,13 @@ fun eval (Unit u) = Unit u
                 |car(cons(Var x, t)) => eval(getEnv((Var x), Env))
                 |car(cons(h, t)) => eval(h)
                 |quote(x) => if isVar(x) then eval(quote(getEnv(x,Env))) else eval(quote(x))
-                |apply(x,y) => x (* if isVar(x) then let val X = getEnv(x,Env) in
+                |apply(x,y) => if isVar(x) then let val X = getEnv(x,Env) in
                                     if isFun(X) then 
                                         if isVar(y) then let val Y = getEnv(y,Env) in
                                             applyFun(X,Y,Env) end
                                         else applyFun(X,y,Env) 
+                                    
 
-
-                                if isVar(y) then eval(apply(X,getEnv(y,Env))) else eval(apply(X,y)) end 
-                                else eval(apply(x,y)) *)
                 |letLisp(x,y,z) => if isVar(x) then let val X = getEnv(x,Env) in
                                 if isVar(y) then eval(letLisp(X,getEnv(y,Env),Env)) else eval(letLisp(X,y,Env)) end 
                                 else eval(letLisp(x,y,Env)) 
