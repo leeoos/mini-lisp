@@ -63,7 +63,7 @@ fun eval (Unit u) = Unit u
 | eval (car lst) = let fun getCar(lst)= 
     case lst of
         none => Unit ()
-    | cons(h,t) => (eval h)
+    | cons(h,t) => h
     in getCar (eval lst) end
 
 (*cdr of a list displays all the elemnts of that list but the first *)
