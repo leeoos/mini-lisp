@@ -269,3 +269,5 @@ startEnv(var,args,Env);
 printer Env;*)
 
 apply(lambda(cons((Var "x"),none),letLisp(y,(Var "y"),none),none),cons((Int 3),none));
+(fn x => let val y = (let val z=9 in z end) in y end) 3;
+(fn x => let val y = (let val z=9 in x end) in y end) 3;
