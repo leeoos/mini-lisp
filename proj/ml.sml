@@ -121,7 +121,7 @@ fun eval (Unit u) = Unit u
 						| cons (h,t) => if  v = let fun getVar(Var x) = x in getVar(eval(car(h))) end
 										then eval (car (cdr h) ) else getEnv( (Var v), t )
 			 
-						in let fun evalExp(body,res) = case body of
+                        in let fun evalExp(body,res) = case body of
                             (Var x) => eval(getEnv((Var x),Env)) 
 							|Plus(none) => Int res
 							|Plus(cons(Var x, t)) => evalExp(Plus (t), res + getInt(getEnv((Var x), Env))) 
