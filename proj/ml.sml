@@ -134,12 +134,12 @@ fun eval (Unit u) = Unit u
 							|Plus(cons(Int i, t)) => evalExp(Plus(t) , res + i) 
 							|plus(x,y) => if isVar(x) then 
                                                 if isVar(y) then 
-                                                    eval(plus(getEnv(x, Env),getEnv(y, Env)))
+                                                    evalExp(plus(getEnv(x, Env),getEnv(y, Env)),0)
 										        else 
                                                     evalExp(plus(getEnv(x,Env),y),0)
 										  else  
                                                 if isVar(y) then 
-                                                        eval(plus(x,getEnv(y,Env))) 
+                                                        evalExp(plus(x,getEnv(y,Env)),0) 
                                                 else 
                                                         eval(plus(x,y))
 
