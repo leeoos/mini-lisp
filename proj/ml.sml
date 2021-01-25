@@ -71,26 +71,28 @@ fun eval (Unit u) = Unit u
     in getCdr (eval lst) end
 
 (*let expression *)
-(*let expression *)
-| eval (letLisp(var,body)) = eval(letFun(var,body,none))
+| eval (letLisp(var,body)) = eval(letFun(var,body,none)) (*mask function *)
 | eval(letFun(var,body,ENV)) = 
+    (*extracting function arguments from var *)
     let val args = 
         let fun getArgs(var,arg) = case var of
             none => arg
             |cons(h,t) => getArgs(t,cons(eval(car(cdr(h))),arg))
         in getArgs(var,none) 
         end
+    (*extracting variable parameters from var *)
     in let val vars =    
         let fun getVars(var,vars) = case var of
             none => vars
             |cons(h,t) => getVars(t,cons(eval(car(h)),vars))
         in getVars(var,none) 
         end
+    (*calling the apply function on the lambda term equivalent to let *) 
     in eval(applyFun(lambda(vars,body),args,ENV)) 
 	   end
 	end
 
-(*lambda expression is a function object written in lisp *)
+(*lambda expression is a function  written in lisp *)
 | eval (lambda(var,body)) = lambda(var,body)
 
 (*apply calls lisp functions with given arguments *)
@@ -103,24 +105,28 @@ fun eval (Unit u) = Unit u
     in getFun(h,t) end
 
 (*secial case, apply of lambda *)
-| eval (apply(lambda(var,body),args)) = eval (applyFun(lambda(var,body),args,none))
+| eval (apply(lambda(var,body),args)) = eval (applyFun(lambda(var,body),args,none)) (*mask function*)
 | eval (applyFun(x,args,ENV)) = 
+    (*check if the firs argument is a lambda expression or another lisp term*)
 	let fun f(x,args , ENV) =case x of
 		 Sym s => eval(apply(x,args))
-		| lambda(var,body) =>
+		| lambda(var,body) =>       (*if is a lambda ...*)
 			if (len var) = (len args) then 
+                (*fill the enviroment *)
 				let val Env =
 					let fun startEnv( var, args, env)= case var of
 						none => env
-						| cons (h,t) => startEnv(eval(cdr(var)), eval(cdr(args)),cons(cons(eval(car(var)),cons(eval(car(args)),none)),env))
+						| cons (h,t) => startEnv(eval(cdr(var)), eval(cdr(args)), cons(cons(eval(car(var)),cons(eval(eval(car(args))),none)),env))
 					in startEnv(var,args,ENV) end 
 
+                    (*local fun to get values of a var in the enviroment *)
 					in let fun getEnv ((Var v), env) = 
 						case env of
 						none => raise Fail "Empty environment or variable not found"
 						| cons (h,t) => if  v = let fun getVar(Var x) = x in getVar(eval(car(h))) end
 										then eval (car (cdr h) ) else getEnv( (Var v), t )
-			 
+
+			            (*evaluate the body of the function case by case*)
                         in let fun evalExp(body,res) = case body of
                             (Var x) => eval(getEnv((Var x),Env)) 
 							|Plus(none) => Int res
@@ -130,7 +136,7 @@ fun eval (Unit u) = Unit u
                                                 if isVar(y) then 
                                                     eval(plus(getEnv(x, Env),getEnv(y, Env)))
 										        else 
-                                                    eval(plus(getEnv(x, Env),y))
+                                                    evalExp(plus(getEnv(x,Env),y),0)
 										  else  
                                                 if isVar(y) then 
                                                         eval(plus(x,getEnv(y,Env))) 
@@ -140,8 +146,11 @@ fun eval (Unit u) = Unit u
 							|car(Var x) => eval(car(getEnv((Var x), Env)))   
 							|car(cons(Var x, t)) => eval(getEnv((Var x), Env))
 							|car(cons(h, t)) => eval(h)
+                            |cdr(Var x) => eval(cdr(getEnv((Var x), Env)))
+                            |cdr(cons(h,t)) => eval(t)
 							|quote(x) => if isVar(x) then eval(quote(getEnv(x,Env))) else eval(quote(x))
 
+                            (*if apply or let are inside the function's body then we need to make a recursive call passing the old env *) 
 							|apply(x,y) =>  if isVar(x) then 
                                                 let val X = getEnv(x,Env) in
                                                     if isVar(y) then 
@@ -179,6 +188,7 @@ fun eval (Unit u) = Unit u
 		in f(x,args,ENV)
 	end
 
+(* quote returns its single argument, as written, without evaluating it *)
 | eval (quote l) = let fun mkCons (Unit u) = cons(Unit u, none) 
     |mkCons (Int i) = Int i
     |mkCons (Str s) = Str s
@@ -198,10 +208,11 @@ fun eval (Unit u) = Unit u
     |mkCons (cons(h,t)) = cons(Sym "cons", cons(h,mkCons(t)))
     in mkCons(l) end
 
+(*cons create s-expression *)
 | eval (cons(h,t)) = cons(h,t)
 | eval _ = raise Fail "impossible to evaluate the expression, non exaustive match"
 
-
+(*pretty converts lisp in string*)
 fun pretty (Unit u) = "()"
 | pretty (Int i) = Int.toString i 
 | pretty (Str s) = "\""^s^"\""
@@ -232,6 +243,7 @@ fun pretty (Unit u) = "()"
     | printQuote (Plus lst) = pretty(Plus lst)
     | printQuote (car lst) = pretty(car lst)
     | printQuote (cdr lst) = pretty(cdr lst)
+    | printQuote (letLisp(var,body)) = pretty(letLisp(var,body))
     | printQuote (lambda (var,body)) = pretty(lambda(var,body))
     | printQuote (apply (m,n)) = pretty(apply(m,n))    
     | printQuote (quote x) = "(quote " ^ printQuote(x) ^")"
@@ -266,44 +278,31 @@ fun getType (Unit u) = "Unit"
 
 fun typeOf term = (print ("\n- "^ (getType (eval term)) ^"\n"^"\n"));
 
-
+(* ESEMPI UTILI *)
 print ("\n\nExamples:\n");
-
-(* t = (1 2 3 4) *)
-val t = cons((Int 1), cons((Int 2), cons((Int 3), cons((Int 4),none))));
-
-(* var =  (x y) *)
-val var = cons(Var "x", cons(Var "y", none));
-
-(* args =  (2 4) *)
-val args = cons(Int 2, cons(Int 4, none));
-
-(* body = (+ x y) *)
-val body = Plus(cons(eval(car(cons((Var "x"), cons((Var "y"),none)))), cons((Var "y"),none)));
-
-val j = Plus(cons(Int 1, cons(Int 2, none)));
-
-val v = cons(cons((Var "x"), cons(j,none)),cons(cons(Var "y",cons(j,none)),none));
-
-val a = cons(cons((Var "x"), cons(plus((Int 1),(Int 2)),none)),cons(cons((Var "y"), cons((Int 1),none)),none));
-
-val x = cons(cons((Var "x"), cons((Int 7),none)),none);
-val lam = letLisp(cons(cons((Var "z"),cons((Int 9),none)),none),(Var "x"));
-val y = cons((Var "y"),cons(lam,none));
-val body_lam = letLisp(cons(cons((Var "x"), cons((Int 3),none)),none), (Var "y"));
-val body_let = letLisp(cons(y,none),body_lam);
 
 printer(apply(lambda(cons((Var "x"),cons((Var "y"),none)),apply((Var "y"), (Var "x"))),cons((Int 1),cons(lambda (cons((Var "z"),none),(Var "z")),none))));
 
+(* ((lambda ((x) (y))  (x y)) (1 (lambda (z) z)) *)
 val identity=lambda (cons((Var "z"),none),(Var "z"));
 val funzione=lambda(cons((Var "x"),cons((Var "y"),none)),apply((Var "y"), (Var "x")));
-eval(apply(funzione,cons((Int 1),cons(identity,none))));
 
-val c = letLisp(cons(cons((Var "x"),cons((Int 3),none)),none),(Var "x"));
-
-val z = eval(apply(lambda(cons((Var "z"),none),c),cons((Int 2),none))); 
- 
-eval(apply(lambda(cons((Var "x"),none),z),cons((Int 1),none)));
+printer (quote(apply(funzione,cons((Int 1),cons(identity,none)))));
+printer (apply(funzione,cons((Int 1),cons(identity,none))));
 
 
+(* (apply (lambda (x) (let ((y 5)) (apply x 1)) zlam) *)
+val zlam = lambda( (cons(Var "z", none), Var "y" ));
 
+ val appl_zlam = apply( lambda( cons((Var "x"), none), letLisp( cons(cons((Var "y"), cons((Int 5), none)), none),apply((Var "x"), cons((Int 1),none)))), cons(zlam,none));
+
+printer (quote appl_zlam);
+printer(appl_zlam);
+
+(* let val x = 3 in (let val y = x in (let val x = 3 in y+1 end)end)end *)
+val let_3 = letLisp( cons(cons((Var "x"), cons((Int 3),none)),none), plus((Var "y"),(Int 1)));
+val let_2 = letLisp( cons(cons((Var "y"), cons((Var "x"),none)),none), let_3);
+val let_1 = letLisp( cons(cons((Var "x"), cons((Int 2),none)),none), let_2);
+
+printer(quote(let_1));
+printer(let_1);
