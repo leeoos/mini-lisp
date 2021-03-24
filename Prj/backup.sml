@@ -280,3 +280,9 @@ fun getType (Unit u) = "Unit"
 fun typeOf term = (print ("\n- "^ (getType (eval term)) ^"\n"^"\n"));
 
 (******************************************************************************)
+val exp = plus((Int 1), (Int 2));
+printer exp;
+typeOf exp;
+val exp = plus((Int 1), (Int 2));
+printer exp;
+typeOf exp;
