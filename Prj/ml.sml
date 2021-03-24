@@ -278,7 +278,7 @@ fun getType (Unit u) = "Unit"
 
 fun typeOf term = (print ("\n- "^ (getType (eval term)) ^"\n"^"\n"));
 
-(* ESEMPI UTILI *)
+(* SOME EXAMPLES *)
 print ("\n\nExamples:\n");
 
 printer(apply(lambda(cons((Var "x"),cons((Var "y"),none)),apply((Var "y"), (Var "x"))),cons((Int 1),cons(lambda (cons((Var "z"),none),(Var "z")),none))));
