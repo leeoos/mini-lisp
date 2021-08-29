@@ -1,9 +1,12 @@
-## SOME EXAMPLES
+# SOME EXAMPLES
 
 printer(apply(lambda(cons((Var "x"),cons((Var "y"),none)),apply((Var "y"), (Var "x"))),cons((Int 1),cons(lambda (cons((Var "z"),none),(Var "z")),none))));
 
 
-<h2> ((lambda ((x) (y))  (x y)) (1 (lambda (z) z)) </h2>
+## LISP version:
+### ((lambda ((x) (y))  (x y)) (1 (lambda (z) z)) </h2>
+
+## MiniLisp version:
 
 val identity=lambda (cons((Var "z"),none),(Var "z"));
 val funzione=lambda(cons((Var "x"),cons((Var "y"),none)),apply((Var "y"), (Var "x")));
