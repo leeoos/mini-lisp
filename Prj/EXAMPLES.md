@@ -1,4 +1,4 @@
-#SOME EXAMPLES
+## SOME EXAMPLES
 
 printer(apply(lambda(cons((Var "x"),cons((Var "y"),none)),apply((Var "y"), (Var "x"))),cons((Int 1),cons(lambda (cons((Var "z"),none),(Var "z")),none))));
 
