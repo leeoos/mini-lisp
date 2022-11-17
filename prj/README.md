@@ -1,4 +1,4 @@
-# How to use the interpreter
+## How to use it
 The following examples show how to test Mini-LISP to evaluate the sintatic properties of the interpreter.
 
 #### Example 1
