@@ -1,6 +1,6 @@
 ## How to use it
 In order to use this program it is sufficent to download the file *ml.sml* (or just or cut ant paste the code inside it).
-To run the code is necessary to have installed a SML interpreter. Once installed is possible to lunch SML in a terminal, and open the interactive command line:
+To run the code is necessary to have installed the SML interpreter. Once installed is possible to lunch SML in a terminal, and open the interactive command line:
 ```
   sml
 ```
