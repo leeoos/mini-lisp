@@ -1,14 +1,15 @@
 ## How to use it
-The following examples show how to test Mini-LISP to evaluate the sintatic properties of the interpreter.
+In order to use this program is sufficent to download the file *ml.sml* (or just or cut ant paste the code inside it).
 To run the code is necessary to have installed a SML interpreter. Once installed is possible to lunch SML in a terminal, and open the interactive command line:
 ```
   sml
 ```
-To activate the mini LISP environment use this command
+To activate the mini LISP environment type the following command in the console:
 ```
-  use "minilisp.sml"
+  use "ml.sml"
 ```
 
+The following examples show how to test Mini-LISP to evaluate the sintatic properties of the interpreter.
 #### Example 1
 ###### LISP version:
 ```
